@@ -94,7 +94,7 @@
             <div class="new-mofism">
               <div class="new-folder" draggable="true" id="newFolder"
                 @dragstart="dragStartNewFolder"
-                @dragend="dragEndNewFolder"
+                @dragend="clearInsertChoice"
               >
                 <span class="material-symbols-outlined hover">drag_indicator</span>
                 <span class="material-symbols-outlined">create_new_folder</span>

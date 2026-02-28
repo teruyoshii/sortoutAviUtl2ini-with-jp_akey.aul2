@@ -2,7 +2,7 @@ import ButtonCssIcon from './components/button-css-icon.js';
 import ToggleButton from './components/toggle-button.js'
 import TreeItem from './components/tree-item.js';
 
-const {createApp, ref, computed, onMounted, toRaw} = Vue;
+const {createApp, ref, computed, watch, onMounted, toRaw} = Vue;
 
 const rootApp = createApp({
   components: {
@@ -370,10 +370,11 @@ const rootApp = createApp({
     function dragStartNewFolder () {
       insertItems.value.push({model: {name:'', isOpen:true, children:[]}, parent:null, index:null});
     }
-    function dragEndNewFolder () {
+    function clearInsertChoice () {
       insertTarget.value.splice(0);
       insertItems.value.splice(0);
     }
+    watch(()=>[setting.value.process, setting.value.type], clearInsertChoice);
 
     function dragLeaveFromDropArea (e) {
       console.log(e.target, e.currentTarget);
@@ -505,7 +506,7 @@ const rootApp = createApp({
       insertItems,
       modifierKeyFlag,
       dragStartNewFolder,
-      dragEndNewFolder,
+      clearInsertChoice,
 
       dragLeaveFromDropArea,
       dropToDropArea,
