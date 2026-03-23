@@ -284,16 +284,18 @@ export default {
     <summary @click.alt="recordModifierKeyFlag" @click.shift="recordModifierKeyFlag">
       <span class="material-symbols-outlined hover">drag_indicator</span>
       <div>
-        <input type="text" v-model="model.name" />
-        <input v-if="accessKeyMap !== undefined"
-          type="text" maxlength="2"
-          class="access-key-input folder-key" :class="{conflict: isConflict(model)}"
-          :value="accessKeyMap?.get(model.name)?.accessKey ?? ''"
-          @click.stop
-          @keydown.stop
-          @input.stop="e => setAccessKey(model.name, e.currentTarget.value)"
-          placeholder="key"
-        />
+        <span class="folder-name-wrap">
+          <input type="text" v-model="model.name" />
+          <input v-if="accessKeyMap !== undefined"
+            type="text" maxlength="2"
+            class="access-key-input folder-key" :class="{conflict: isConflict(model)}"
+            :value="accessKeyMap?.get(model.name)?.accessKey ?? ''"
+            @click.stop
+            @keydown.stop
+            @input.stop="e => setAccessKey(model.name, e.currentTarget.value)"
+            placeholder="key"
+          />
+        </span>
         <span class="material-symbols-outlined" @click.stop.prevent="sortTreeData(model.children, $event.altKey)">sort</span>
         <button-css-icon icon-name="icon-close" @click.stop.prevent="ungroupFolder(model, parentArray, index)"></button-css-icon>
       </div>

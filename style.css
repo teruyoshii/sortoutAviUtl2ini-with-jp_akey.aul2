@@ -675,6 +675,13 @@
       width: calc(100% - 2ch);
     }
 
+    .folder-name-wrap {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+    }
+
     input[type=text]:not(.folder-key) {
       color: currentColor;
       background-color: transparent;
@@ -683,8 +690,9 @@
       font-size: 1rem;
       font-family: auto;
       padding: 0.25rem 0.5rem;
-      width: auto;
-
+      min-width: 0;
+      flex: 0 1 auto;
+      field-sizing: content;
     }
 
     .access-key-input {
@@ -721,10 +729,6 @@
       }
     }
 
-    /* sort スパンを右端へ押し出す */
-    >div>.material-symbols-outlined {
-      margin-inline-start: auto;
-    }
 
     .icon-close {
       --size: 10px;
