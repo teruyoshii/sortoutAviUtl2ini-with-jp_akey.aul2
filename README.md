@@ -3,6 +3,10 @@
 seilor様の[sortoutAviUtl2ini](https://seilor0.github.io/sortoutAviUtl2ini/)をもとに、Garech-mas様の[日本語(アクセスキー付き).aul2](https://github.com/Garech-mas/jp_akey.aul2)の設定も編集できるようにしたものです。
 サイトは[こちら](https://teruyoshii.github.io/sortoutAviUtl2ini-with-jp_akey.aul2/)
 
+## 既知の問題
+- rootにあるスクリプトのアクセスキー設定を追加した場合、aul2に記述される場所が変になる
+- エイリアスのアクセスキー設定が上手く行かない (object.[エイリアス名])となってしまうため
+
 ## Credits
 
 <details>
