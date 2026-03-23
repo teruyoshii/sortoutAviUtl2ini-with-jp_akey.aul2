@@ -1,6 +1,7 @@
 # sortoutAviUtl2ini with 日本語(アクセスキー付き).aul2
 
 seilor様の[sortoutAviUtl2ini](https://seilor0.github.io/sortoutAviUtl2ini/)をもとに、Garech-mas様の[日本語(アクセスキー付き).aul2](https://github.com/Garech-mas/jp_akey.aul2)の設定も編集できるようにしたものです。
+サイトは[こちら](https://teruyoshii.github.io/sortoutAviUtl2ini-with-jp_akey.aul2/)
 
 ## Credits
 
