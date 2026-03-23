@@ -4,7 +4,7 @@ seilor様の[sortoutAviUtl2ini](https://seilor0.github.io/sortoutAviUtl2ini/)を
 サイトは[こちら](https://teruyoshii.github.io/sortoutAviUtl2ini-with-jp_akey.aul2/)
 
 ## 既知の問題
-- rootにあるスクリプトのアクセスキー設定を追加した場合、aul2に記述される場所が変になる
+- rootにあるスクリプトや新規グループ(名称変更含む)のアクセスキー設定を追加した場合、aul2に記述される場所が変になる
 
 ## Credits
 
