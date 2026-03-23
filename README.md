@@ -5,7 +5,6 @@ seilor様の[sortoutAviUtl2ini](https://seilor0.github.io/sortoutAviUtl2ini/)を
 
 ## 既知の問題
 - rootにあるスクリプトのアクセスキー設定を追加した場合、aul2に記述される場所が変になる
-- エイリアスのアクセスキー設定が上手く行かない (object.[エイリアス名])となってしまうため
 
 ## Credits
 
