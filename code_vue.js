@@ -142,7 +142,10 @@ const rootApp = createApp({
           return;
         }
 
-        const originalName = line.slice(0, eqIdx);
+        let originalName = line.slice(0, eqIdx);
+        if (originalName.startsWith('object.')) originalName = originalName.slice(7);
+        else if (originalName.startsWith('effect.')) originalName = originalName.slice(7);
+
         const valuePart = line.slice(eqIdx + 1);
 
         // 末尾の (&X) を探す
@@ -296,7 +299,9 @@ const rootApp = createApp({
         .forEach(el => {
           if (/^(?:Color|Effect|Font|Movement|Params)\..+/.test(el)) {
             const splitArr = el.trim().split('\r\n');
-            const { type, name } = splitArr.shift().match(/(?<type>.+?)\.(?<name>.+?)]$/).groups;
+            let { type, name } = splitArr.shift().match(/(?<type>.+?)\.(?<name>.+?)]$/).groups;
+            if (name.startsWith('object.')) name = name.slice(7);
+            else if (name.startsWith('effect.')) name = name.slice(7);
 
             const dic = { name: name, initOrder: null, toDelete: false, uninstalled: false, props: {} };
 
@@ -413,7 +418,7 @@ const rootApp = createApp({
         }
         // alias
         else if (extension === 'object' || extension === 'effect') {
-          installedPackage.data.get('Effect').add(`${extension}.${filename}`);
+          installedPackage.data.get('Effect').add(filename);
         }
         // anm2?|cam2?|scn2?|obj2?|tra2?
         else {
