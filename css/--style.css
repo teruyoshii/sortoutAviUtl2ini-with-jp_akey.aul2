@@ -544,10 +544,12 @@
     
     &::marker {color: goldenrod;}
   
+    /* 開閉の印(▼ と空白)の分を空ける。2chでは、ブラウザの拡大率が小さい時(67%など)に
+       幅の丸めで足りなくなり、見出しが印の次の行に改行されるので、余裕を持って2em空ける */
     > div {
       display: inline-flex;
       align-items: center;
-      width: calc(100% - 2ch);
+      width: calc(100% - 2em);
     }
   
     .icon-frame {
