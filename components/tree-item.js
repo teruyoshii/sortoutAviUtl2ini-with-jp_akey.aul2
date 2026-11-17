@@ -1,29 +1,33 @@
 import ButtonCssIcon from "./button-css-icon.js";
-const { computed, toRaw } = Vue
+import GoogleIcon from './google-icon.js';
+
+const { computed, ref, nextTick, toRaw } = Vue
 
 export default {
   name: 'TreeItem',
   props: {
     model: Object,
-    setting: Object,
     parentArray: Array,
     index: Number,
-    fileClickFunc: Function,
 
     insertTarget: Array,
     insertItems: Array,
-    modifierKeyFlag: Object,
+
+    setting: Object,
+    dragData: Object,
 
     accessKeyMap: Map,
     setAccessKey: Function,
     setDisplayName: Function,
   },
 
-  components: {ButtonCssIcon},
-  emits: ['switch-tree-data'],
+  components: {
+    ButtonCssIcon,
+    GoogleIcon,
+  },
 
   setup(props, {emit}) {
-    const fileStyle = computed(() => {
+    const packageStyle = computed(() => {
       const previewFontFlag = props.setting.previewFont.enabled && props.setting.type==='Font';
       if (!previewFontFlag) return null;
       else {
@@ -40,46 +44,30 @@ export default {
 
     const treeItemClass = computed(() => {
       const targetFlag = 
-        props.insertTarget[0]?.parent === props.parentArray && 
-        props.insertTarget[0]?.index === props.index;
+        props.dragData.startModel === null &&
+        props.insertTarget.at(-1)?.parent === props.parentArray && 
+        props.insertTarget.at(-1)?.index === props.index;
 
-      return {
-        target: targetFlag, 
-        choice: props.insertItems.some(dic=>dic.model===props.model)
-      }
+      const choiceFlag = props.insertItems.some(dic=>dic.model===props.model);
+
+      return {'is-target': targetFlag, 'is-choice': choiceFlag};
     });
 
     const folderBodyClass = computed(() => {
       const targetFlag = 
         props.model.children.length === 0 &&
-        props.insertTarget[0]?.parent === props.model.children;
+        props.insertTarget.at(-1)?.parent === props.model.children;
 
       const targetDownFlag = 
         props.model.children.length &&
-        props.insertTarget[0]?.parent === props.model.children && 
-        props.insertTarget[0]?.index === props.model.children.length;
+        props.insertTarget.at(-1)?.parent === props.model.children && 
+        props.insertTarget.at(-1)?.index === props.model.children.length;
 
-      return { 'target': targetFlag, 'target-down': targetDownFlag, };
+      return { 'is-target': targetFlag, 'is-target-down': targetDownFlag, };
     });
 
 
-    function recordModifierKeyFlag (e) {
-      // console.log('modifier key is recorded.');
-      props.modifierKeyFlag.ctrl = e.ctrlKey;
-      props.modifierKeyFlag.alt = e.altKey;
-      props.modifierKeyFlag.shift = e.shiftKey;
-    }
-
-    function clearModifierKeyFlag () {
-      // console.log('modifier key is cleared.');
-      props.modifierKeyFlag.ctrl = null;
-      props.modifierKeyFlag.alt = null;
-      props.modifierKeyFlag.shift = null;
-    }
-
-    function ungroupFolder (model, parentArray, index) {
-      parentArray.splice(index, 1, ...model.children);
-    }
+    function ungroupFolder (model, parentArray, index) {parentArray.splice(index, 1, ...model.children);}
 
     function sortTreeData (targetArr, recursive=false) {
       const sortStyle = props.setting.labelSort.style;
@@ -92,7 +80,7 @@ export default {
           .sort((a,b) => isAsc * (a.name > b.name ? 1 : -1))
           .sort((a,b) => Boolean(a.children) > Boolean(b.children) ? -1 : 1);
           
-        } else if (sortStyle==='folderIsBottom') {
+      } else if (sortStyle==='folderIsBottom') {
         targetArr
           .sort((a,b) => isAsc * (a.name > b.name ? -1 : 1))
           .sort((a,b) => Boolean(a.children) > Boolean(b.children) ? 1 : -1);
@@ -105,13 +93,13 @@ export default {
       }
     }
 
-    function toggleDetails (status, model, parentArr=[], includeSiblings=false, includeDecendants=false, isStart=false) {
+    function toggleDetails (status, model, parentArray=[], includeSiblings=false, includeDecendants=false) {
       model.isOpen = status;
       // siblings
       if (includeSiblings) {
-        parentArr
+        parentArray
           .filter(sibling=>sibling.children)
-          .forEach(sibling=>toggleDetails(status, sibling, parentArr, false, includeDecendants));
+          .forEach(sibling=>toggleDetails(status, sibling, parentArray, false, includeDecendants));
       }
       // decendants
       if (includeDecendants) {
@@ -119,303 +107,270 @@ export default {
           .filter(child=>child.children)
           .forEach(child=>toggleDetails(status, child, model.children, false, includeDecendants));
       }
-      if (isStart) clearModifierKeyFlag();
     }
-
 
     function addInsertModels () {
       if (props.insertItems.some(dic=>dic.model===props.model)) return;
       props.insertItems.push({model: props.model, parent: props.parentArray, index: props.index});
-      // console.log('add insert models');
+      // console.log('add: ', props.model.name);
     }
     
     function toggleInsertModels () {
       const i = props.insertItems.findIndex(dic=>dic.model===props.model);
       if (i > -1) props.insertItems.splice(i, 1);
-      else props.insertItems.push({model: props.model, parent: props.parentArray, index: props.index});
-      // console.log('toggle insert models');
-    }
-
-    function dragEnterToTreeItem () {
-      props.insertTarget.push({parent: props.parentArray, index: props.index});
-      // console.log('-------------');
-      // console.log('enter - file / folder');
-    }
-
-    function dragEnterToEmptyFolderBody () {
-      props.insertTarget.push({parent: props.model.children, index: 0});
-      // console.log('-------------');
-      // console.log('enter - empty-folder-body');
-    }
-    
-    function dragEnterToFillFolderBody (e) {
-      if (e.offsetY > e.currentTarget.getBoundingClientRect().height-8)
-        props.insertTarget.push({parent: props.model.children, index: props.model.children.length});
-      // console.log('-------------');
-      // console.log('enter - fill-folder-body');
-    }
-    
-    function dragLeave () {
-      props.insertTarget.shift();
-      // console.log('-------------');
-      // console.log('leave', e.currentTarget);
-    }
-    
-    function dragLeaveFromFillFolderBody () {
-      const target = props.insertTarget[0];
-      if (target?.parent===props.model.children && target?.index===props.model.children.length)
-        props.insertTarget.shift();
-      // console.log('-------------');
-      // console.log('leave - fill-folder-body');
-    }
-    
-    function drop () {
-      console.log('-------------');
-      console.log('drop for :', toRaw(props.insertTarget[0]));
-      // console.log('insert items:', [...toRaw(props.insertItems)]);
-
-      // フォルダに含まれている子要素をinsertItemsから削除
-      deleteChildTreeItem(props.insertItems.map(item=>item.model));
-
-      function deleteChildTreeItem (modelArr) {
-        modelArr
-          .filter(model => model.children)
-          .forEach(model => {
-            // modelの子modelがinsertModelsにあったら削除
-            model.children.forEach(child => {
-              const i = props.insertItems.findIndex(item=>item.model===child);
-              if (i>-1) props.insertItems.splice(i,1);
-              if (child.children) deleteChildTreeItem(child.children);
-            });
-          });
+      else {
+        props.insertItems.push({model: props.model, parent: props.parentArray, index: props.index});
+        // console.log('add: ', props.model.name)
       }
-      
-      // 挿入アイテムのソート ... 選択順で追加されてしまうため
-      props.insertItems
-        .sort((a, b)=>{
-          const aOrder = a.model.children ? a.model.order : a.model.props.order;
-          const bOrder = b.model.children ? b.model.order : b.model.props.order;
-          return aOrder - bOrder;
-        });
-        
-      const target = props.insertTarget[0];
-      const a = props.insertItems.filter(item=> item.parent === target.parent && item.index < target.index);
-
-      // 大元アイテムの削除
-      props.insertItems.forEach(item=>{
-        if (!item.parent) return;
-        const i = item.parent.findIndex(model=>model===item.model);
-        item.parent.splice(i, 1);
-      });
-
-      // 挿入
-      target.parent.splice(target.index-a.length, 0, ...props.insertItems.map(item=>item.model));
-      
-      // イベント発行 ... order更新のため
-      // console.log('emit switch-tree-data event');
-      emit('switch-tree-data');
     }
 
-    function dragEnd () {
-      // console.log('drag end', props.modifierKeyFlag.ctrl);
-      if (!props.modifierKeyFlag.ctrl) {
-        props.insertTarget.splice(0);
-        props.insertItems.splice(0);
-      }
-      clearModifierKeyFlag();
-    }
+    // -----------------------
+    //   access key (.aul2)
+    // -----------------------
+    const aul2Entry = computed(() => props.accessKeyMap.get(props.model.menuName));
+    const accessKey = computed(() => aul2Entry.value?.accessKey ?? '');
+    const displayName = computed(() => aul2Entry.value?.displayName ?? props.model.menuName);
+    const isDisplayNameEdited = computed(() => displayName.value !== props.model.menuName);
 
     /** 同一親配列内で同じアクセスキーを持つ兄弟がいるか判定 */
-    function isConflict(model) {
-      if (!props.accessKeyMap) return false;
-      const key = props.accessKeyMap.get(model.name)?.accessKey;
-      if (!key) return false;
-      // 自身が非表示設定なら衝突なし
-      if (model.props?.hide) return false;
+    const isConflict = computed(() => {
+      if (!accessKey.value) return false;
+      // 非表示設定のパッケージはポップアップに出ないので対象外
+      if (props.model.props?.hide) return false;
       return props.parentArray.some(sibling =>
-        sibling !== model &&
-        // 非表示設定の兄弟はポップアップに出ないので除外
+        sibling !== props.model &&
         !sibling.props?.hide &&
-        props.accessKeyMap.get(sibling.name)?.accessKey === key
+        props.accessKeyMap.get(sibling.menuName)?.accessKey === accessKey.value
       );
-    }
+    });
 
     /** 表示名編集中かどうか */
-    const editingDisplayName = Vue.ref(false);
+    const editingDisplayName = ref(false);
 
-    function startEditDisplayName(e) {
-      if (!props.setDisplayName) return;
+    function startEditDisplayName (e) {
+      const container = e.currentTarget.closest('summary, .package');
       editingDisplayName.value = true;
-      Vue.nextTick(() => {
-        const container = e.currentTarget.closest('summary, .file') ?? e.currentTarget.parentElement;
+      nextTick(() => {
         const el = container?.querySelector('.display-name-input');
         if (el) { el.focus(); el.select(); }
       });
     }
-
-    function commitDisplayName(e) {
-      if (!props.setDisplayName) return;
-      props.setDisplayName(props.model.name, e.currentTarget.value);
+    function commitDisplayName (e) {
+      if (!editingDisplayName.value) return;
       editingDisplayName.value = false;
+      props.setDisplayName(props.model.menuName, e.currentTarget.value);
+    }
+    function cancelEditDisplayName () {editingDisplayName.value = false;}
+
+
+    // -----------------------
+    //     drag and click
+    // -----------------------
+    function mouseEnterExactToTreeItem (e) {
+      if (!props.dragData.isDragging) return;
+      props.insertTarget.push({parent: props.parentArray, index: props.index});
+    }
+    function mouseEnterCtrlToTreeItem (e) {
+      if (!props.dragData.isDragging) return;
+      addInsertModels();
+    }
+    function mouseEnterToFolderBody (e) {
+      if (!props.dragData.isDragging) return;
+      const bodyHeight = e.currentTarget.getBoundingClientRect().height;
+      const index = e.offsetY > bodyHeight/2 ? props.model.children.length : 0;
+      props.insertTarget.push({parent: props.model.children, index: index});
     }
 
-    function cancelEditDisplayName() {
-      editingDisplayName.value = false;
+    function mouseLeaveExactFromTreeItem (e) {
+      if (!props.dragData.isDragging) return;
+      props.insertTarget.pop();
+      // folder-body or result-divがドロップ対象になるので、
+      // indexをマウス位置に応じて修正
+      const bodyRect = e.currentTarget.parentElement.getBoundingClientRect();
+      const bodyCenter = (bodyRect.top + bodyRect.bottom) / 2;
+      const index = e.pageY > bodyCenter ? props.parentArray.length : 0;
+      props.insertTarget.at(-1).index = index;
+      
+      // start-modelが存在=初めての移動の場合、
+      // drag-start相当の処理をする
+      if (props.dragData.startModel) {
+        if (!props.insertItems.length) {
+          props.insertItems.push(props.dragData.startModel);
+          console.log('add: ', props.dragData.startModel.model.name);
+        }
+        props.dragData.startModel = null;
+      }
+    }
+    function mouseLeaveCtrlFromTreeItem (e) {
+      if (!props.dragData.isDragging) return;
+      addInsertModels();
+      // start-modelが存在=初めての移動の場合、
+      // drag-start相当の処理をする
+      if (props.dragData.startModel) {
+        if (!props.insertItems.some(dic=>dic.model===props.dragData.startModel.model)) {
+          props.insertItems.push(props.dragData.startModel);
+        }
+        props.dragData.startModel = null;
+      }
+    }
+    function mouseLeaveFromFolderBody (e) {
+      if (!props.dragData.isDragging) return;
+      props.insertTarget.pop();
     }
 
-    /** 表示名を取得（未設定時はoriginalName） */
-    function getDisplayName(model) {
-      return props.accessKeyMap?.get(model.name)?.displayName ?? model.name;
+    function mouseDownTreeItem (e) {
+      // drag-start要素を記憶
+      if (props.dragData.startModel===null) {
+        props.dragData.startModel = {model: props.model, parent: props.parentArray, index: props.index};
+      }
+    }
+    function mouseDownExactTreeItem () {
+      props.insertTarget.unshift({parent: props.parentArray, index: props.index});
+    }
+    function mouseDownFolderBody () {
+      props.insertTarget.unshift({parent: props.model.children, index: 0});
+    }
+
+    // click相当
+    function mouseUpExactTreeItem (e) {
+      if (!props.dragData.isDragging) return;
+      if (props.dragData.startModel?.model!==props.model) return;  
+      // console.log('clicked tree-item', props.model);
+      if (!props.model.children) {
+        props.model.props.hide = 1-props.model.props.hide;
+      }
+    }
+    function mouseUpCtrlTreeItem (e) {
+      if (!props.dragData.isDragging) return;
+      if (props.dragData.startModel?.model!==props.model) return;  
+      // console.log('ctrl-clicked package', props.model);
+      toggleInsertModels();
     }
 
 
     return {
-      fileStyle,
+      packageStyle,
       treeItemClass,
       folderBodyClass,
       
       ungroupFolder,
       sortTreeData,
       toggleDetails,
-      recordModifierKeyFlag,
 
-      addInsertModels,
-      toggleInsertModels,
+      mouseEnterExactToTreeItem,
+      mouseEnterCtrlToTreeItem,
+      mouseEnterToFolderBody,
 
-      dragEnterToTreeItem,
-      dragEnterToEmptyFolderBody,
-      dragEnterToFillFolderBody,
-      
-      dragLeave,
-      dragLeaveFromFillFolderBody,
+      mouseLeaveExactFromTreeItem,
+      mouseLeaveCtrlFromTreeItem,
+      mouseLeaveFromFolderBody,
 
-      dragEnd,
-      drop,
+      mouseDownTreeItem,
+      mouseDownExactTreeItem,
+      mouseDownFolderBody,
 
+      mouseUpExactTreeItem,
+      mouseUpCtrlTreeItem,
+
+      accessKey,
+      displayName,
+      isDisplayNameEdited,
       isConflict,
       editingDisplayName,
       startEditDisplayName,
       commitDisplayName,
       cancelEditDisplayName,
-      getDisplayName,
     }
   },
 
   template: `
-  <details v-if="Boolean(model.children)" draggable="true" :open="model.isOpen"
+  <details v-if="Boolean(model.children)" :open="model.isOpen"
     class="folder" :class="treeItemClass"
-    @toggle="toggleDetails($event.currentTarget.open, model, parentArray, modifierKeyFlag.shift, modifierKeyFlag.alt, true)"
-    @click.ctrl.stop.prevent="toggleInsertModels"
-  
-    @dragstart.exact.stop="addInsertModels"
-    @dragstart.ctrl.stop="recordModifierKeyFlag"
-    @dragend.stop="dragEnd"
-    
-    @dragenter.exact.stop="dragEnterToTreeItem"
-    @dragleave.exact.stop="dragLeave"
-    @dragenter.ctrl.stop="addInsertModels"
-  
-    @dragover.prevent
-    @drop.exact.stop="drop"
+    @mouseenter.exact="mouseEnterExactToTreeItem"
+    @mouseenter.ctrl="mouseEnterCtrlToTreeItem"
+    @mouseleave.exact="mouseLeaveExactFromTreeItem"
+    @mouseleave.ctrl="mouseLeaveCtrlFromTreeItem"
+    @mousedown="mouseDownTreeItem"
+    @mousedown.exact="mouseDownExactTreeItem"
+    @mouseup.exact="mouseUpExactTreeItem"
+    @mouseup.ctrl="mouseUpCtrlTreeItem"
   >
-    
-    <summary @click.alt="recordModifierKeyFlag" @click.shift="recordModifierKeyFlag">
-      <span class="material-symbols-outlined hover">drag_indicator</span>
+    <summary @click.stop.prevent="if (!$event.ctrlKey) toggleDetails(!model.isOpen, model, parentArray, $event.shiftKey, $event.altKey);">
+      <google-icon class="is-hover">drag_indicator</google-icon>
       <div>
         <span class="folder-name-wrap">
-          <input type="text" v-model="model.name" @dblclick.stop="startEditDisplayName" />
-          <input v-if="accessKeyMap !== undefined && editingDisplayName"
-            type="text"
-            class="access-key-input display-name-input folder-key"
-            :value="accessKeyMap?.get(model.name)?.displayName ?? model.name"
+          <input type="text" v-model="model.name" class="folder-name" placeholder="グループ名を入力" @click.exact.stop @dblclick.stop="startEditDisplayName" />
+          <input v-if="editingDisplayName" type="text" class="access-key-input display-name-input" placeholder="表示名"
+            :value="displayName"
+            @mousedown.stop
             @click.stop
             @keydown.stop
             @keydown.enter.stop="commitDisplayName"
             @keydown.esc.stop="cancelEditDisplayName"
             @blur="commitDisplayName"
-            placeholder="表示名"
           />
-          <input v-else-if="accessKeyMap !== undefined"
-            type="text" maxlength="2"
-            class="access-key-input folder-key" :class="{conflict: isConflict(model)}"
-            :value="accessKeyMap?.get(model.name)?.accessKey ?? ''"
+          <input v-else type="text" maxlength="2" class="access-key-input" :class="{'is-conflict': isConflict}" placeholder="key"
+            :value="accessKey"
+            @mousedown.stop
             @click.stop
             @keydown.stop
-            @input.stop="e => setAccessKey(model.name, e.currentTarget.value)"
-            placeholder="key"
+            @input.stop="setAccessKey(model.menuName, $event.currentTarget.value)"
           />
         </span>
-        <span class="material-symbols-outlined" @click.stop.prevent="sortTreeData(model.children, $event.altKey)">sort</span>
+        <google-icon @click.stop.prevent="sortTreeData(model.children, $event.altKey)">sort</google-icon>
         <button-css-icon icon-name="icon-close" @click.stop.prevent="ungroupFolder(model, parentArray, index)"></button-css-icon>
       </div>
     </summary>
   
     <div class="folder-body" :class="folderBodyClass"
-      @dragenter.exact.stop="model.children.length ? dragEnterToFillFolderBody($event) : dragEnterToEmptyFolderBody()"
-      @dragleave.exact.stop="model.children.length ? dragLeaveFromFillFolderBody() : dragLeave()"
-      @dragenter.ctrl.stop
-      @dragover.prevent
-      @drop.exact.stop="drop"
+      @mouseenter.exact="mouseEnterToFolderBody"
+      @mouseleave.exact="mouseLeaveFromFolderBody"
+      @mousedown.exact="mouseDownFolderBody"
     >
       <tree-item v-for="(childModel, index) in model.children"
         :model="childModel"
-        :setting="setting"
         :parent-array="model.children"
         :index="index"
-        :file-click-func="fileClickFunc"
         :insert-target="insertTarget"
         :insert-items="insertItems"
-        :modifier-key-flag="modifierKeyFlag"
+        :setting="setting"
+        :drag-data="dragData"
         :access-key-map="accessKeyMap"
         :set-access-key="setAccessKey"
         :set-display-name="setDisplayName"
-        @switch-tree-data="$emit('switch-tree-data')"
       ></tree-item>
     </div>
   </details>
   
-  <p v-else v-if="!model.toDelete" draggable="true"
-    class="file" :class="{hide: model.props.hide, ...treeItemClass}" :style="fileStyle"
-    @click.ctrl.stop="toggleInsertModels"
-    
-    @dragstart.exact.stop="addInsertModels"
-    @dragstart.ctrl.stop="recordModifierKeyFlag"
-    @dragend.stop="dragEnd"
-  
-    @dragenter.exact.stop="dragEnterToTreeItem"
-    @dragleave.exact.stop="dragLeave"
-    @dragenter.ctrl.stop="addInsertModels"
-  
-    @dragover.prevent
-    @drop.exact.stop="drop"
+  <p v-else v-if="!model.toDelete" class="package" :class="{'is-hide': model.props.hide, ...treeItemClass}" :style="packageStyle"
+    @mouseenter.exact="mouseEnterExactToTreeItem"
+    @mouseenter.ctrl="mouseEnterCtrlToTreeItem"
+    @mouseleave.exact="mouseLeaveExactFromTreeItem"
+    @mouseleave.ctrl="mouseLeaveCtrlFromTreeItem"
+    @mousedown="mouseDownTreeItem"
+    @mousedown.exact="mouseDownExactTreeItem"
+    @mouseup.exact="mouseUpExactTreeItem"
+    @mouseup.ctrl="mouseUpCtrlTreeItem"
   >
-    <span class="material-symbols-outlined hover">drag_indicator</span>
-    <span class="file-name-wrap">
-      <span class="file-name"
-        :class="{edited: accessKeyMap && accessKeyMap.get(model.name)?.displayName && accessKeyMap.get(model.name)?.displayName !== model.name}"
-        @click.alt.exact.stop.prevent="startEditDisplayName"
-        @click.exact="fileClickFunc(model)"
-      >{{model.name}}<template v-if="accessKeyMap && accessKeyMap.get(model.name)?.displayName && accessKeyMap.get(model.name)?.displayName !== model.name"
-        ><span class="display-name-hint"> → {{accessKeyMap.get(model.name).displayName}}</span></template></span>
-      <input v-if="editingDisplayName"
-        type="text"
-        class="access-key-input display-name-input"
-        :value="accessKeyMap?.get(model.name)?.displayName ?? model.name"
+    <google-icon class="is-hover">drag_indicator</google-icon>
+    <span class="package-name-wrap">
+      <span class="package-name" :class="{'is-edited': isDisplayNameEdited}" @click.alt.exact="startEditDisplayName"
+        >{{model.menuName}}<span v-if="isDisplayNameEdited" class="display-name-hint"> → {{displayName}}</span></span>
+      <input v-if="editingDisplayName" type="text" class="access-key-input display-name-input" placeholder="表示名"
+        :value="displayName"
+        @mousedown.stop
         @click.stop
         @keydown.stop
         @keydown.enter.stop="commitDisplayName"
         @keydown.esc.stop="cancelEditDisplayName"
         @blur="commitDisplayName"
-        placeholder="表示名"
       />
-      <input v-else-if="accessKeyMap !== undefined"
-        type="text" maxlength="2"
-        class="access-key-input" :class="{conflict: isConflict(model)}"
-        :value="accessKeyMap?.get(model.name)?.accessKey ?? ''"
+      <input v-else type="text" maxlength="2" class="access-key-input" :class="{'is-conflict': isConflict}" placeholder="key"
+        :value="accessKey"
+        @mousedown.stop
         @click.stop
         @keydown.stop
-        @input.stop="e => setAccessKey(model.name, e.currentTarget.value)"
-        placeholder="key"
+        @input.stop="setAccessKey(model.menuName, $event.currentTarget.value)"
       />
     </span>
   </p>

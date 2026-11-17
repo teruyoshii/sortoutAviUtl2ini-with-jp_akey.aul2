@@ -1,0 +1,692 @@
+/* ------------------------------ */
+/* サイトごとの個別CSSを記述する場所 */
+/* __utility フォルダでは使わない   */
+/* ------------------------------ */
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+.new-folder .material-symbols-outlined {
+  font-size: 2.5rem;
+  color: #d7d02b;
+}
+
+.folder summary div .material-symbols-outlined {
+  color: currentColor;
+  font-variation-settings: 'wght' 500;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: goldenrod;
+    color: white;
+  }
+}
+
+.material-symbols-outlined.is-hover {
+  font-size: calc(1.5rem + 2px);
+  color: darkgray;
+  position: absolute;
+  left: -1.5rem;
+}
+
+.mark .material-symbols-outlined {
+  font-size: 2em;
+  color: #d7d02b;
+  margin-inline-end: 0.25rem;
+}
+
+:not(:hover) .is-hover {display: none;}
+
+
+
+/* ---------------------- */
+/*        || event        */
+/* ---------------------- */
+@layer state {
+  .is-target:is(.package,.folder,.folder-body)::before,
+  .is-target-down.folder-body::before {
+    content: '';
+    background-color: red;
+    width: stretch;
+    height: 3px;
+    position: absolute;
+  }
+  .is-target.package::before {top: -1px;}
+  .is-target.folder::before {top: -6px;}
+  .is-target.folder-body::before {
+    width: calc(100% - 2.25rem);
+    top: 8px;
+  }
+  .is-target-down.folder-body::before {
+    width: calc(100% - 2.25rem);
+    bottom: 8px;
+  }
+  
+  .is-target-down.result > :last-child::before {
+    content: '';
+    background-color: red;
+    width: stretch;
+    height: 3px;
+    position: absolute;
+    bottom: -6px;
+  }
+
+  /* グループを横に並べている場合は、挿入位置をグループの左右に表示 */
+  .is-row.result > .is-target.folder::before {
+    top: 0;
+    left: -0.5rem;
+    width: 3px;
+    height: 100%;
+  }
+  .is-row.is-target-down.result > .folder:last-child::before {
+    top: 0;
+    bottom: auto;
+    right: -0.5rem;
+    width: 3px;
+    height: 100%;
+  }
+
+  .is-target.package {background-color: #ffcdd5;}
+  .is-target.folder {
+    border-color: red;
+    & > summary {
+      color: #db1010;
+      background-color: #ffcdd5;
+      border-color: red;
+      &::marker {color: #db1010;}
+    }
+  }
+  
+  .is-target.folder-body,
+  .is-target-down.folder-body {background-color: #ffcdd5;}
+
+  
+  .is-target.drop-area {
+    color: white;
+    background-color: #72bed6;
+    border: 2px dotted var(--blue);
+  }
+
+  .round-button.blue.is-target {
+    color: var(--blue);
+    background-color: var(--off-white);
+    border: 1px solid var(--light-blue);
+  }
+
+  .is-choice {
+    background-color: rgb(114 190 214 / 33%);
+    border-color: var(--blue);
+    & > summary {
+      color: var(--blue);
+      background-color: lightblue;
+      border-color: var(--blue);
+      &::marker {color: var(--blue)}
+    }
+  }
+
+  .is-hide {
+    color: rgb(0 0 0 /0.33);
+    &::before {content: '(';}
+    &::after  {content: ')';}
+  }
+
+  .is-disabled {
+    opacity: 0.33;
+    pointer-events: none;
+  }
+}
+
+
+/* ---------------------- */
+/*     || base, reset     */
+/* ---------------------- */
+@layer base {
+  p {margin: 0;}
+  a {color: var(--blue);}
+  hr {
+    margin-block: 1rem;
+    width: stretch;
+  }
+  select {
+    width: stretch;
+    padding-block: 2px;
+    border-radius: 3px;
+  }
+  mark {
+    background:linear-gradient(transparent 60%, #f5f3ba 0%);
+    padding: 1px 0.5rem;
+  }
+  code {
+    background-color: #e3e3e3;
+    font-size: 1rem;
+    border-radius: 4px;
+    padding: 1px 0.5rem;
+  }
+  h1 {
+    text-align: center;
+    user-select: none;
+    font-weight: 100;
+  }
+}
+/* ---------------------- */
+
+
+/* ---------------------- */
+/*       || layout        */
+/* ---------------------- */
+/* imported */
+@layer layout {
+  .l-side-bar {
+    padding: 1rem;
+    gap: 1rem;
+    width: 20rem;
+  
+    .round-button {
+      width: 75%;
+      white-space: nowrap;
+    }
+  
+    > :last-child {
+      flex-grow: 1;
+      margin-block-end: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+  }
+
+}
+
+
+/* project */
+@layer layout {
+  .l-main-content {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .l-tab-bar {
+    color: white;
+    background: var(--blue-gradient);
+    height: 2.5rem;
+    
+    display: flex;
+    padding-inline: 2.5rem 1rem;
+    padding-block: 0.5rem 0;
+  }
+  .l-tab {
+    border: 1px solid transparent;
+    border-radius: 0.75rem 0.75rem 0 0;
+    align-content: center;
+    padding: 0.375rem 1rem;
+    min-width: 3rem;
+    text-align: center;
+
+    input[type=radio] {display: none;}
+
+    &:has(:checked) {
+      color: var(--blue);
+      background-color: var(--off-white);
+      font-weight: 600;
+    }
+    &:not(:has(:checked)):hover {
+      background-color: rgb(0 0 0 / 0.2);
+    }
+  }
+
+  [data-process] {
+    padding-block-start: 2rem;
+    padding-inline: 5rem;
+    height: calc(100dvh - 5rem);
+    overflow-block: auto;
+  }
+  
+  /* ラベル分けページは左右の余白を詰めて、一覧の表示領域を広くとる */
+  [data-process=labeling] {
+    padding-block-start: 1rem;
+    padding-inline: 0.75rem 0;
+    height: calc(100dvh - 4rem);
+
+    .result {padding-inline-start: 1.5rem;} /* ドラッグアイコンの分 */
+  }
+
+  .result {
+    padding-block-end: 20%;
+    height: max-content;
+    user-select: none;
+  }
+  /* 最上位のグループを横に並べる ... 画面に収まらない分は.result内でスクロール */
+  .result.is-row {
+    flex: 1;
+    width: 0; /* 中身の幅でページ全体が広がらないようにする */
+    box-sizing: border-box;
+    height: calc(100dvh - 4rem);
+    padding-inline: 1.5rem;
+    padding-block-end: 4rem;
+    overflow: auto;
+
+    display: flex;
+    align-items: flex-start;
+    column-gap: 1rem;
+
+    > * {flex-shrink: 0;}
+  }
+}
+
+
+/* ---------------------- */
+/*   imported component   */
+/* ---------------------- */
+@layer component {
+  .toggle-button {
+    --radius: 7px;
+    color: var(--accent);
+    font-weight: 500;
+    justify-content: flex-start;
+  }
+
+  .invert-el {
+    --line-color: var(--light-blue);
+    --active-back-color: var(--blue-gradient);
+  }
+
+  .link {
+    font-weight: 500;
+  }
+
+  .basic-dialog {
+    width: max-content;
+    max-width: min(50rem,90dvw);
+    user-select: none;
+
+    header {
+      padding-inline-start: 2rem;
+    }
+
+    section {
+      padding: 1rem 2rem;
+      h3 {
+        border-block-end: 1px solid darkgray;
+        margin-block: 1.5rem 0;
+        &:first-child {margin-block-start: 0;}
+      }
+    }
+  }
+
+  .setting-div {
+    margin-block: 1rem;
+    > :nth-child(odd) {
+      background-color: var(--light-blue);
+    }
+  }
+}
+
+
+/* ---------------------- */
+/*    project component   */
+/* ---------------------- */
+@layer component {
+  .round-tag {
+    color: var(--light-blue);
+    border: 1px solid currentColor;
+    box-shadow: -1px 1px 4px rgba(0, 0, 0, 0.2);
+    padding: 0.25rem 1rem;
+    height: 1.5rem;
+    border-radius: 1.5rem;
+    align-content: center;
+    text-align: center;
+    
+    &:active {
+      text-decoration: underline;
+    }
+    &:has(:checked) {
+      color: white;
+      background: var(--blue-gradient);
+    }
+    input {display: none;}
+  }
+  
+  .type-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    max-width: 16rem;
+    padding-block-start: 2px;
+
+    .round-tag {flex: 1;}
+  }
+
+  .float-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    
+    flex-shrink: 0;
+    white-space: nowrap;
+    height: max-content;
+    min-width: 7rem;
+    position: sticky;
+    top: 0;
+  }
+
+  .new-mofism-card {
+    border: 1px solid white;
+    padding: 1rem 1.5rem;
+    border-radius: 1.5rem;
+    corner-shape: squircle;
+    box-shadow: 
+      0px 6px 10px 3px rgba(0 0 0 /0.2),
+      inset 0px 0px 10px 2px white;
+
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    white-space: nowrap;
+    height: max-content;
+
+    p {font-size: smaller;}
+  }
+
+  .annotation {
+    color: rgb(0 0 0 /0.5);
+    font-size: calc(1em - 1px);
+  }
+}
+
+/*   ホーム　ページ   */
+@layer component {
+  [data-process=home] {
+    h2 {margin: 0;}
+    h3 {
+      border-block-end: 1px solid darkgray;
+      margin-block: 2.5rem 0;
+    }
+    p {margin-block: 1rem;}
+    ul {
+      color: var(--blue);
+      font-weight: 600;
+    }
+    li {margin-block: 0.75rem;}
+
+    .file-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin-block-end: 0.5rem;
+
+      .round-button {padding-inline: 1.25em;}
+    }
+
+    .setting-div {
+      gap: 0 1rem;
+      > :nth-child(even) {line-height: 1;}
+    }
+  }
+}
+
+/* 重複を削除　ページ */
+@layer component {
+  .see-through {color: rgb(0 0 0 /0.4);}
+    
+  .del-dup-table {
+    border-collapse: collapse;
+    user-select: none;
+    width: stretch;
+    min-width: 36rem;
+    font-weight: 300;
+
+    thead {
+      white-space: nowrap;
+      color: white;
+      background: var(--blue-gradient);
+    }
+    thead input[type=radio] {display: none;}
+    thead label {display: block;}
+    thead th:has(:checked) {
+      color: var(--blue);
+      background-color: lightblue;
+      font-weight: 800;
+    }
+
+    tbody input[type="checkbox"] {
+      width: 60%;
+      aspect-ratio: 1 / 1;
+    }
+
+    tbody tr {cursor: pointer;}
+    tr:nth-child(even) {background-color: #f0f0f0;}
+    tr.uninstalled {background-color: lightpink;}
+    tr.to-delete {
+      color: rgb(0 0 0 /0.4);
+      text-decoration: line-through;
+    }
+
+    tbody td {border-block: 1px solid rgb(0 0 0 /0.25);}
+    th {
+      font-size: calc(1em - 2px);
+      font-weight: 400;
+      text-align: center;
+    }
+    th,td {padding: 4px 8px;}
+    td:first-child {text-align: center;}
+  }
+}
+
+/* ラベリング　ページ */
+@layer component {
+  .new-folder {
+    color: #a29d13;
+    border: 1px solid #d7d02b;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+
+    border-radius: 0.5rem;
+    margin-block-end: 0.5rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    
+    user-select: none;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .drop-area {
+    border: 2px dotted #72bed6;
+    color: #72bed6;
+    padding: 0.25rem 1rem;
+    border-radius: 0.5rem;
+    font-size: calc(1em - 2px);
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+    user-select: none;
+  }
+  
+  .package {
+    height: 1.5em;
+    align-content: center;
+    white-space: pre-wrap;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .mark {
+    color: #a29d13;
+    font-size: calc(1rem - 2px);
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+/* folder */
+@layer component {
+  .folder {
+    border: 1px solid darkgoldenrod;
+    margin-block: 0.5rem;
+    box-shadow: 0px 4px 5px rgb(0 0 0 / 0.1);
+    border-radius: 0.5rem;
+    position: relative;
+    min-inline-size: max-content;
+    cursor: pointer;
+  }
+
+  .folder > summary {
+    color: darkgoldenrod;
+    background-color: #f5f3ba;
+    padding-inline-start: 0.5rem;
+    border-radius: 0.5rem;
+    position: relative;
+    
+    &::marker {color: goldenrod;}
+  
+    > div {
+      display: inline-flex;
+      align-items: center;
+      width: calc(100% - 2ch);
+    }
+  
+    .icon-frame {
+      padding: 0.5rem;
+      background-color: transparent;
+      color: currentColor;
+      border-style: none;
+      border-radius: 6px;
+      &:hover {
+        color: white;
+        background-color: goldenrod;
+      }
+    }
+
+    .icon-close {
+      --size: 10px;
+      --line-radius: 1.5px;
+    }
+  }
+
+  .folder[open] > summary {
+    border-block-end: 1px solid darkgoldenrod;
+    border-end-end-radius: 0;
+    border-end-start-radius: 0;
+  }
+
+  /* 横並び時、閉じているグループは縦書きにして幅を詰める */
+  .result.is-row > .folder:not([open]) > summary {
+    writing-mode: vertical-rl;
+    padding-inline: 0.5rem;
+
+    > div {
+      width: auto;
+      gap: 0.25rem;
+    }
+    .folder-name {padding: 0.5rem 0.25rem;}
+    .access-key-input {
+      writing-mode: horizontal-tb;
+      margin-inline-start: 0.5rem;
+    }
+    .material-symbols-outlined {writing-mode: horizontal-tb;}
+  }
+
+  .folder-name-wrap {
+    display: inline-flex;
+    align-items: center;
+    flex: 1;
+  }
+
+  .folder-name {
+    color: currentColor;
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-family: auto;
+    padding: 0.25rem 0.5rem;
+    flex: 0 1 auto;
+    field-sizing: content;
+  }
+  .folder-name::placeholder {
+    color: currentColor;
+    opacity: 0.5;
+  }
+
+  /* 横並び時の、グループ分けされていないパッケージ用の枠 */
+  .root-group {
+    border: 1px dashed darkgray;
+    border-radius: 0.5rem;
+    margin-block: 0.5rem;
+    padding-block: 0.25rem 0.5rem;
+    padding-inline: 1.5rem 0.75rem;
+    position: relative;
+  }
+  .root-group__title {
+    color: gray;
+    font-size: smaller;
+    margin-inline-start: -0.75rem;
+    margin-block-end: 0.25rem;
+  }
+
+  .folder-body {
+    min-height: 1.5rem;
+    padding-block: 0.5rem;
+    padding-inline: 1.5rem 0.75rem;
+    border-end-start-radius: 0.5rem;
+    border-end-end-radius: 0.5rem;
+    position: relative;
+  }
+}
+
+/* アクセスキー・表示名 (.aul2) */
+@layer component {
+  .package-name-wrap {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .package-name {
+    &:hover {text-decoration: underline dotted rgb(0 0 0 / 0.3);}
+    &.is-edited {
+      text-decoration: underline dotted steelblue;
+      text-underline-offset: 3px;
+    }
+  }
+
+  .display-name-hint {
+    font-size: 0.8em;
+    color: steelblue;
+    margin-inline-start: 0.25em;
+    pointer-events: none;
+  }
+
+  .access-key-input {
+    margin-inline-start: 0.75rem;
+    width: 4.4ch;
+    height: 1.8em;
+    font-size: 0.85em;
+    text-align: center;
+    text-transform: uppercase;
+    border: 1px solid var(--light-blue);
+    border-radius: 3px;
+    padding: 1px 2px;
+    cursor: text;
+    font-family: monospace;
+    vertical-align: middle;
+
+    &.display-name-input {
+      width: 12ch;
+      text-align: start;
+      text-transform: none;
+      font-family: inherit;
+      border-color: steelblue;
+    }
+
+    &.is-conflict {
+      border-color: #e03030;
+      background-color: #ffdddd;
+      color: #a00000;
+    }
+  }
+}
